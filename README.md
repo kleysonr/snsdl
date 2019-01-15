@@ -1,2 +1,1 @@
-# snsdl
-Deep Learning helper
+# Deep Learning Helper
