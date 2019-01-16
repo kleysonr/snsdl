@@ -96,7 +96,8 @@ class BaseSequenceGenerator(Sequence):
             images.append(image)
             labels.append(y[i])
 
-            # print('Batch: {}-{} >> {}'.format(index, i, file))
+            # print('Batch: {}-{} >> {}'.format(index, i, str(file)))
+            # print('Batch: '.format(str(file)))
 
         return np.array(images), np.array(labels)          
 

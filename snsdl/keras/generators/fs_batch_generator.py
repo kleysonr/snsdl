@@ -57,8 +57,14 @@ class FsBatchGenerator():
         # Number of images of the smallest class
         self.minsize = math.inf
 
-        # Mapping between class name and one hot enconding
-        self.classes = None         
+        # Mapping between class name and labels enconding {class_name:class_code}
+        self.encoded_classes = None
+
+        # Mapping between class name its encoded index {class_name:class_index}
+        self.class_indices = None
+
+        # Encoder
+        self.le = None
 
         # Get a list of all the images under dataset/{class}/*
         fileslist = paths.list_images(dataset_path)
@@ -104,14 +110,18 @@ class FsBatchGenerator():
         else:
             self.le = LabelBinarizer()
 
-        # Create label encoding
+        # Encode classes
         classes_name = list(self.data.keys())
-        self.classes = dict(zip(classes_name, self.le.fit_transform(classes_name)))
+        class_codes = self.le.fit_transform(classes_name)
+
+        # Create mappings
+        self.encoded_classes = dict(zip(classes_name, self.le.fit_transform(classes_name)))
+        self.class_indices = dict(zip(classes_name, list(np.argmax(class_codes, axis=-1))))        
 
         # Create dataset labels
         self.__create_labels()
 
-        print('')
+        self.__info()
 
     def __create_labels(self):
 
@@ -126,7 +136,7 @@ class FsBatchGenerator():
 
                 # Class name
                 label = self.train_test_val[ds][i].split(os.path.sep)[-2]
-                label = self.classes[label]
+                label = self.encoded_classes[label]
                 labels.append(label)
 
             self.labels_train_test_val[ds] = dict(zip(self.train_test_val[ds], labels))
@@ -178,3 +188,33 @@ class FsBatchGenerator():
             self.valGenerator = FsSequenceGenerator(self.train_test_val['val'], self.labels_train_test_val['val'], batch_size=self.batch_size, shuffle=self.shuffle, preprocessors=self.preprocessors)
 
         return self.valGenerator
+
+    def getNumberOfClasses(self):
+        """Get the number of training classes."""
+        return len(self.data.keys())
+
+    def getDatasetSize(self, dataset):
+        """Get the size of a given dataset (full / train / test / val)."""
+
+        if dataset == 'full':
+            return self.datasetsize
+        else:
+            return len(self.train_test_val[dataset])
+
+    def getTrueClasses(self, dataset):
+        """Get an array with the true classes for a given dataset (train / test / val)."""
+
+        encoded = [self.labels_train_test_val[dataset][s] for s in self.train_test_val[dataset]]
+        encoded_indx = list(np.argmax(encoded, axis=-1))
+
+        return [list(self.class_indices.keys())[list(self.class_indices.values()).index(s)] for s in encoded_indx]
+
+    def __info(self):
+        print('')
+        print('Dataset information:')
+        print('   Dataset size: {}'.format(self.getDatasetSize('full')))
+        print('   Training size: {}'.format(self.getDatasetSize('train')))
+        print('   Testing size: {}'.format(self.getDatasetSize('test')))
+        print('   Validation size: {}'.format(self.getDatasetSize('val')))
+        print('   # of classes: {}'.format(self.getNumberOfClasses()))
+        print('')
