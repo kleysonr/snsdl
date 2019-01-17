@@ -32,8 +32,7 @@ class ImageResizePreprocessor:
 irp = ImageResizePreprocessor(imageW, imageH)
 
 # Keras batch generator instance
-# batchGen = FsBatchGenerator('/home/kleysonr/Documents/pessoal/opencv/dl4cv/SB_Code/datasets/animals', test_ratio=0.20, val_ratio=0.2, preprocessors=[irp], batch_size=batch_size)
-batchGen = FsBatchGenerator('/home/kleysonr/Downloads/keras-generator/dataset', test_ratio=0.20, val_ratio=0.2, preprocessors=[irp], batch_size=batch_size)
+batchGen = FsBatchGenerator('/project/dataset', test_ratio=0.20, val_ratio=0.2, preprocessors=[irp], batch_size=batch_size)
 
 # Dataset generators
 train_generator = batchGen.train
