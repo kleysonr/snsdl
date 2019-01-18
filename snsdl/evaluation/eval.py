@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 import numpy as np
 import itertools
-import os.path
+import os
 
 # Credits - https://www.kaggle.com/danbrice/keras-plot-history-full-report-and-grid-search
 
@@ -53,6 +53,7 @@ class Eval:
         f.subplots_adjust(hspace=0.5)
 
         if png_output is not None:
+            os.makedirs(png_output, exist_ok=True)
             f.savefig(os.path.join(png_output,'loss_acc.png'), bbox_inches='tight')
 
         if show:
@@ -116,6 +117,7 @@ class Eval:
         plt.xlabel('Predicted label')
 
         if png_output is not None:
+            os.makedirs(png_output, exist_ok=True)
             f.savefig(os.path.join(png_output,'confusion_matrix.png'), bbox_inches='tight')
 
         if show:

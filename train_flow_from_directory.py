@@ -1,6 +1,7 @@
 import keras
 import cv2
 import math
+import os
 import numpy as np
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Flatten
@@ -69,10 +70,12 @@ history = model.fit_generator(
             generator=train_generator,
             validation_data=val_generator,
             use_multiprocessing=False,
-            workers=1)
+            workers=1,
+            epochs=epochs)
 
 # Save model
-model.save('model/cnn_example.model')
+os.makedirs('saved_models', exist_ok=True)
+model.save('saved_models/cnn_example.model')
 
 # Predict new samples
 steps = math.ceil(test_generator.n / batch_size)
