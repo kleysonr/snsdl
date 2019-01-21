@@ -97,6 +97,23 @@ class BaseWrapper:
         res.update(override)
         return res
 
+    def getMetricsValues(self, history, score=None):
+
+        metrics = {}
+
+        # Metrics from training phase
+        for m in history.history:
+            metrics[m] = history.history[m][-1]
+            # metrics[m] = format(history.history[m][-1],'.5f')
+
+        #
+        if score is not None:
+            for i in range(len(score)):
+                score_metric_name = 'test_{}'.format(self.model.metrics_names[i])
+                metrics[score_metric_name] = score[i]
+
+        return metrics
+
     def get_model(self):
         """
         Gets the latest model generated.
@@ -187,3 +204,26 @@ class BaseWrapper:
         predictions = self.model.predict_generator(test_generator, **fit_args)
 
         return predictions
+
+    def evaluate_generator(self, test_generator, **kwargs):
+        """
+        Constructs a new model with 'build_fn' & Evaluates the model on a data generator..
+
+        Arguments:
+            test_generator : a generator or a Sequence object for the testing data.
+            **kwargs: dictionary arguments 
+                Legal arguments are the arguments of Keras evaluate_generator function.
+
+        Returns:
+            scores : Scalar test loss (if the model has a single output and no metrics) or list of scalars (if the model has multiple outputs and/or metrics).
+        """
+
+        # Create the Keras models
+        self.model = self.build_fn(**self.filter_sk_params(self.build_fn))
+        
+        # Filter parameters for the Keras functions
+        fit_args = copy.deepcopy(self.filter_sk_params(self.model.evaluate_generator))
+
+        scores = self.model.evaluate_generator(test_generator, **fit_args)
+
+        return scores        

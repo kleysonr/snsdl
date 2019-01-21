@@ -9,8 +9,8 @@ class BaseModel:
     def create_model(self):
         raise RuntimeError('Must be implemented by subclasses.')
 
-    def getParams(self):
-        """Gets the next combination of params for the model."""
+    def getSearchParams(self):
+        """Gets the combination of all params for the model."""
 
         if self.params is None:
             raise ValueError('Define the space search params.')

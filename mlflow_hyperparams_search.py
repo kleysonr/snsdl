@@ -1,6 +1,9 @@
 import math
+import os
+import tempfile
 import numpy as np
 from keras.preprocessing.image import ImageDataGenerator
+from snsdl.evaluation import Eval
 from snsdl.keras.wrappers import MlflowClassifier
 from myModels.vgg16 import VGG16
 
@@ -52,9 +55,12 @@ paramsSearch = {
 # Custom model to train
 myModel = VGG16(params=paramsSearch)
 
-params = myModel.getParams()
+# Get all the combinations of the parameters
+params = myModel.getSearchParams()
 
 for p in params:
+
+    artifacts_dir = tempfile.mkdtemp()
 
     # Create new classifier
     mlfc = MlflowClassifier(myModel.create_model, **p)
@@ -65,6 +71,12 @@ for p in params:
     # Predict the test samples
     predict = mlfc.predict_generator(test_generator)
 
+    # Score
+    score = mlfc.evaluate_generator(test_generator)
+
+    # Training / Validation / Testing metrics
+    metrics = mlfc.getMetricsValues(history, score=score)
+
     # Predicted labels
     labels = test_generator.class_indices
     labels = dict((v,k) for k,v in labels.items())
@@ -73,5 +85,12 @@ for p in params:
     # True labels
     y_true = [labels[k] for k in test_generator.classes]
 
+    # Evaluate results
+    class_names = sorted(test_generator.class_indices.items(), key=lambda kv: kv[1])
+    class_names = [item[0] for item in class_names]
+
+    Eval.plot_history(history, png_output=os.path.join(artifacts_dir,'images'), show=False)
+    Eval.full_multiclass_report(y_true, y_predict, class_names, png_output=os.path.join(artifacts_dir,'images'), show=False)
+
     # Log mlflow
-    mlfc.log()
+    mlfc.log(artifacts=artifacts_dir, metrics=metrics)

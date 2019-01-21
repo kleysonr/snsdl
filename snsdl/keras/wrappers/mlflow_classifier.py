@@ -23,9 +23,10 @@ class MlflowClassifier(BaseWrapper):
         else:
             print("MLflow Tracking URI: %s" % "local directory 'mlruns'")
 
-    def log(self):
+    def log(self, artifacts=None, metrics=None, experiment_id=None):
 
-        # mlflow.set_experiment("Keras_IMDB_Classifier")
+        if experiment_id is not None:
+            mlflow.set_experiment(experiment_id)
 
         with mlflow.start_run():
 
@@ -38,6 +39,15 @@ class MlflowClassifier(BaseWrapper):
             for k, v in params.items():
                 if (k != 'build_fn'):
                     mlflow.log_param(k, v)
+
+            # Log artifacts
+            if artifacts is not None:
+                mlflow.log_artifacts(artifacts, "results")
+
+            # Log metrics
+            if metrics is not None:
+                for k, v in metrics.items():
+                    mlflow.log_metric(k, v)
 
             # # calculate metrics
             # binary_loss = ktrain_cls.get_binary_loss(history)
