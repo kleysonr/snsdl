@@ -4,10 +4,10 @@ from snsdl.keras.wrappers import BaseWrapper
 class MlflowClassifier(BaseWrapper):
     """ Implementation of the mlflow classifier API for Keras using generators."""
 
-    def __init__(self, build_fn, tracking_server=None, **sk_params):
+    def __init__(self, build_fn, train_generator, test_generator, val_generator=None, tracking_server=None, **sk_params):
 
         # Initialize superclass parameters first
-        super(MlflowClassifier, self).__init__(build_fn, **sk_params)
+        super(MlflowClassifier, self).__init__(build_fn, train_generator, test_generator, val_generator, **sk_params)
 
         # We don't want to force people to have tracking server
         # running on localhost as it tracks in mlruns directory
@@ -37,7 +37,8 @@ class MlflowClassifier(BaseWrapper):
             # log parameters
             params = self.get_params()
             for k, v in params.items():
-                if (k != 'build_fn'):
+                # if (k != 'build_fn'):
+                if k not in ['build_fn', 'callbacks']:
                     mlflow.log_param(k, v)
 
             # Log artifacts
@@ -49,27 +50,8 @@ class MlflowClassifier(BaseWrapper):
                 for k, v in metrics.items():
                     mlflow.log_metric(k, v)
 
-            # # calculate metrics
-            # binary_loss = ktrain_cls.get_binary_loss(history)
-            # binary_acc = ktrain_cls.get_binary_acc(history)
-            # validation_loss = ktrain_cls.get_validation_loss(history)
-            # validation_acc = ktrain_cls.get_validation_acc(history)
-            # average_loss = results[0]
-            # average_acc = results[1]
-
-            # # log metrics
-            # mlflow.log_metric("binary_loss", binary_loss)
-            # mlflow.log_metric("binary_acc", binary_acc)
-            # mlflow.log_metric("validation_loss", validation_loss)
-            # mlflow.log_metric("validation_acc", validation_acc)
-            # mlflow.log_metric("average_loss", average_loss)
-            # mlflow.log_metric("average_acc", average_acc)
-
-            # # log artifacts
-            # mlflow.log_artifacts(image_dir, "images")
-
-            # # log model
-            # mlflow.keras.log_model(model, "models")
+            # log model
+            # mlflow.keras.log_model(self.get_model(), "models")
 
             # # save model locally
             # pathdir = "keras_models/" + run_uuid

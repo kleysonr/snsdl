@@ -76,13 +76,29 @@ class Eval:
         
         # Print classification report
         print("Classification Report")
-        print(classification_report(y_true,y_pred,digits=5))    
+        Eval.classification_report(y_true,y_pred,digits=5)
         
         # Plot confusion matrix
         cnf_matrix = confusion_matrix(y_true,y_pred)
         print(cnf_matrix)
 
         Eval.plot_confusion_matrix(cnf_matrix,classes=classes, png_output=png_output, show=show)
+
+    @staticmethod
+    def classification_report(y_true, y_pred, digits=5, output_dir=None):
+
+        report = classification_report(y_true,y_pred,digits=5)
+        print(report)
+
+        if output_dir is not None:
+            path = os.path.join(output_dir, 'text')
+            os.makedirs(path, exist_ok=True)
+
+            file = os.path.join(path, 'classification_report.txt')
+
+            f = open(file, 'w')
+            f.write(report)
+            f.close()
 
     @staticmethod
     def plot_confusion_matrix(cm, classes, normalize=False, cmap=cm.Blues, png_output=None, show=True):

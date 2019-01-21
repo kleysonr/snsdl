@@ -1,7 +1,9 @@
 import types
 import copy
+import numpy as np
 from keras.utils.generic_utils import has_arg
 from keras.models import Sequential, Model
+from sklearn.metrics import classification_report, accuracy_score
 
 class BaseWrapper:
     """
@@ -23,12 +25,18 @@ class BaseWrapper:
     (e.g., `epochs`, `batch_size`).
     """
 
-    def __init__(self, build_fn=None, **sk_params):
+    def __init__(self, build_fn, train_generator, test_generator, val_generator=None, **sk_params):
 
         self.build_fn = build_fn
+        self.train_generator = train_generator
+        self.test_generator = test_generator
+        self.val_generator = val_generator if val_generator is not None else test_generator
         self.sk_params = sk_params
         self.check_params(sk_params)
         self.model = None
+        self.history = None
+        self.predictions = None
+        self.eval_scores = None
 
     def check_params(self, params):
         """
@@ -97,20 +105,53 @@ class BaseWrapper:
         res.update(override)
         return res
 
-    def getMetricsValues(self, history, score=None):
+    def getClassNames(self):
+
+        class_names = sorted(self.test_generator.class_indices.items(), key=lambda kv: kv[1])
+        class_names = [item[0] for item in class_names]
+
+        return class_names
+
+    def getTestPredictLabels(self):
+
+        if self.predictions is not None:
+            labels = self.test_generator.class_indices
+            labels = dict((v,k) for k,v in labels.items())
+            y_predict = [labels[k] for k in list(np.argmax(self.predictions, axis=-1))]
+
+            return y_predict
+        else:
+            return None
+
+    def getTestTrueLabels(self):
+
+        if self.predictions is not None:
+            labels = self.test_generator.class_indices
+            labels = dict((v,k) for k,v in labels.items())
+            y_true = [labels[k] for k in self.test_generator.classes]
+
+            return y_true
+        else:
+            return None
+
+
+    def getMetricsValues(self):
 
         metrics = {}
 
-        # Metrics from training phase
-        for m in history.history:
-            metrics[m] = history.history[m][-1]
-            # metrics[m] = format(history.history[m][-1],'.5f')
+        # Metrics from the training phase
+        if self.history is not None:
+            for m in self.history.history:
+                metrics[m] = self.history.history[m][-1]
 
-        #
-        if score is not None:
-            for i in range(len(score)):
-                score_metric_name = 'test_{}'.format(self.model.metrics_names[i])
-                metrics[score_metric_name] = score[i]
+        # Evaluation scores
+        if self.eval_scores is not None:
+            for i in range(len(self.eval_scores)):
+                score_metric_name = 'eval_{}'.format(self.model.metrics_names[i])
+                metrics[score_metric_name] = self.eval_scores[i]
+
+        # Test prediciton accuracy
+        metrics['test_acc'] = accuracy_score(self.getTestTrueLabels(), self.getTestPredictLabels())
 
         return metrics
 
@@ -157,15 +198,12 @@ class BaseWrapper:
         self.sk_params.update(params)
         return self
 
-    def fit_generator(self, train_generator, val_generator, **kwargs):
+    def fit_generator(self):
         """
         Constructs a new model with 'build_fn' & Train the model.
 
         Arguments:
-            train_generator : a generator or a Sequence object for the training data.
-            val_generator : a generator or a Sequence object for the validation data.
-            **kwargs: dictionary arguments 
-                Legal arguments are the arguments of Keras fit_generator function.
+            None
 
         Returns:
             history : object
@@ -178,18 +216,16 @@ class BaseWrapper:
         # Filter parameters for the Keras functions
         fit_args = copy.deepcopy(self.filter_sk_params(self.model.fit_generator))
 
-        history = self.model.fit_generator(train_generator, validation_data=val_generator, **fit_args)
+        self.history = self.model.fit_generator(self.train_generator, validation_data=self.val_generator, **fit_args)
 
-        return history
+        return self.history
 
-    def predict_generator(self, test_generator, **kwargs):
+    def predict_generator(self):
         """
         Constructs a new model with 'build_fn' & Generates predictions for the input samples from a data generator.
 
         Arguments:
-            test_generator : a generator or a Sequence object for the testing data.
-            **kwargs: dictionary arguments 
-                Legal arguments are the arguments of Keras predict_generator function.
+            None
 
         Returns:
             predictions : Numpy array(s) of predictions.
@@ -201,18 +237,16 @@ class BaseWrapper:
         # Filter parameters for the Keras functions
         fit_args = copy.deepcopy(self.filter_sk_params(self.model.predict_generator))
 
-        predictions = self.model.predict_generator(test_generator, **fit_args)
+        self.predictions = self.model.predict_generator(self.test_generator, **fit_args)
 
-        return predictions
+        return self.predictions
 
-    def evaluate_generator(self, test_generator, **kwargs):
+    def evaluate_generator(self):
         """
         Constructs a new model with 'build_fn' & Evaluates the model on a data generator..
 
         Arguments:
-            test_generator : a generator or a Sequence object for the testing data.
-            **kwargs: dictionary arguments 
-                Legal arguments are the arguments of Keras evaluate_generator function.
+            None
 
         Returns:
             scores : Scalar test loss (if the model has a single output and no metrics) or list of scalars (if the model has multiple outputs and/or metrics).
@@ -224,6 +258,6 @@ class BaseWrapper:
         # Filter parameters for the Keras functions
         fit_args = copy.deepcopy(self.filter_sk_params(self.model.evaluate_generator))
 
-        scores = self.model.evaluate_generator(test_generator, **fit_args)
+        self.eval_scores = self.model.evaluate_generator(self.test_generator, **fit_args)
 
-        return scores        
+        return self.eval_scores        

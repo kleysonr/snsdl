@@ -3,6 +3,7 @@ import os
 import tempfile
 import numpy as np
 from keras.preprocessing.image import ImageDataGenerator
+from keras.callbacks import ModelCheckpoint, EarlyStopping
 from snsdl.evaluation import Eval
 from snsdl.keras.wrappers import MlflowClassifier
 from myModels.vgg16 import VGG16
@@ -45,11 +46,16 @@ val_generator = idg.flow_from_directory(
     seed=42
 )
 
+# Set callback functions to early stop training and save the best model so far
+# callbacks = [[EarlyStopping(monitor='val_loss', patience=5), 
+#                 ModelCheckpoint(filepath='/tmp/best_model.h5', monitor='val_loss', save_best_only=True)]]
+
 # Space search
 paramsSearch = {
     'input_shape':[(imageH, imageW, 3)],
     'num_classes':[train_generator.num_classes],
     'epochs':[2, 5]
+    # ,'callbacks':callbacks
 }
 
 # Custom model to train
@@ -63,34 +69,31 @@ for p in params:
     artifacts_dir = tempfile.mkdtemp()
 
     # Create new classifier
-    mlfc = MlflowClassifier(myModel.create_model, **p)
+    mlfc = MlflowClassifier(myModel.create_model, train_generator, test_generator, val_generator, **p)
 
     # Train the model
-    history = mlfc.fit_generator(train_generator, val_generator, **p)
+    history = mlfc.fit_generator()
 
-    # Predict the test samples
-    predict = mlfc.predict_generator(test_generator)
+    # Predict the test/val samples
+    mlfc.predict_generator()
 
-    # Score
-    score = mlfc.evaluate_generator(test_generator)
+    # Get the training, validation and testing metrics
+    metrics = mlfc.getMetricsValues()
 
-    # Training / Validation / Testing metrics
-    metrics = mlfc.getMetricsValues(history, score=score)
+    # Predicted labels for test set
+    y_predict = mlfc.getTestPredictLabels()
 
-    # Predicted labels
-    labels = test_generator.class_indices
-    labels = dict((v,k) for k,v in labels.items())
-    y_predict = [labels[k] for k in list(np.argmax(predict, axis=-1))]
-
-    # True labels
-    y_true = [labels[k] for k in test_generator.classes]
+    # True labels of the test set
+    y_true = mlfc.getTestTrueLabels()
 
     # Evaluate results
-    class_names = sorted(test_generator.class_indices.items(), key=lambda kv: kv[1])
-    class_names = [item[0] for item in class_names]
+    class_names = mlfc.getClassNames()
 
     Eval.plot_history(history, png_output=os.path.join(artifacts_dir,'images'), show=False)
     Eval.full_multiclass_report(y_true, y_predict, class_names, png_output=os.path.join(artifacts_dir,'images'), show=False)
+
+    # Classification Report
+    Eval.classification_report(y_true, y_predict, output_dir=artifacts_dir)
 
     # Log mlflow
     mlfc.log(artifacts=artifacts_dir, metrics=metrics)
