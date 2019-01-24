@@ -6,7 +6,7 @@ from keras.preprocessing.image import ImageDataGenerator
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 from snsdl.evaluation import Eval
 from snsdl.keras.wrappers import MlflowClassifier
-from myModels.vgg16 import VGG16
+from myModels.shallownet import ShallowNet
 
 # User-defined parameters
 imageW = 64
@@ -17,7 +17,7 @@ batch_size = 32
 idg = ImageDataGenerator(rescale=1. / 255)
 
 train_generator = idg.flow_from_directory(
-    directory="/tmp/dataset/train",
+    directory="/tmp/dataset/output/train",
     target_size=(imageH, imageW),
     color_mode="rgb",
     batch_size=batch_size,
@@ -27,7 +27,7 @@ train_generator = idg.flow_from_directory(
 )
 
 test_generator = idg.flow_from_directory(
-    directory="/tmp/dataset/test",
+    directory="/tmp/dataset/output/test",
     target_size=(imageH, imageW),
     color_mode="rgb",
     batch_size=batch_size,
@@ -37,7 +37,7 @@ test_generator = idg.flow_from_directory(
 )
 
 val_generator = idg.flow_from_directory(
-    directory="/tmp/dataset/val",
+    directory="/tmp/dataset/output/val",
     target_size=(imageH, imageW),
     color_mode="rgb",
     batch_size=batch_size,
@@ -54,12 +54,13 @@ val_generator = idg.flow_from_directory(
 paramsSearch = {
     'input_shape':[(imageH, imageW, 3)],
     'num_classes':[train_generator.num_classes],
-    'epochs':[2, 5]
+    'optimizer': ['adadelta'],
+    'epochs':[1]
     # ,'callbacks':callbacks
 }
 
 # Custom model to train
-myModel = VGG16(params=paramsSearch)
+myModel = ShallowNet(params=paramsSearch)
 
 # Get all the combinations of the parameters
 params = myModel.getSearchParams()
