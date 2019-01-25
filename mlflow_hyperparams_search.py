@@ -94,6 +94,9 @@ for p in params:
     # Classification Report
     Eval.classification_report(y_true, y_predict, output_dir=os.path.join(artifacts_dir, 'text'))
 
+    # Wrong classifications
+    Eval.wrong_predictions_report(test_generator.filenames, y_true, y_predict, os.path.join(artifacts_dir, 'text'))
+
     # Log mlflow
     mlfc.log()
 

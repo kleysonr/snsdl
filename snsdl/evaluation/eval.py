@@ -4,6 +4,7 @@ from matplotlib import cm
 import numpy as np
 import itertools
 import os
+import pandas as pd
 
 # Credits - https://www.kaggle.com/danbrice/keras-plot-history-full-report-and-grid-search
 
@@ -180,3 +181,22 @@ class Eval:
         plt.show()
 
         plt.close(f)
+
+    @staticmethod
+    def wrong_predictions_report(samples, y_true, y_pred, output_dir):
+
+        wrong_preds_indx = (np.array(y_true) == np.array(y_pred))
+        wrong_predictions = np.array(samples)[np.where(wrong_preds_indx == False)]
+
+        y_true_sample = np.array(y_true)[np.where(wrong_preds_indx == False)]
+        y_pred_sample = np.array(y_pred)[np.where(wrong_preds_indx == False)]
+
+        report = pd.DataFrame({'Image': wrong_predictions, 'True': y_true_sample, 'Predicted': y_pred_sample})
+
+        os.makedirs(output_dir, exist_ok=True)
+
+        file = os.path.join(output_dir, 'wrong_predictions_report.txt')
+
+        f = open(file, 'w')
+        f.write(report.to_string())
+        f.close()
