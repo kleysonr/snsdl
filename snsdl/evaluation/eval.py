@@ -91,10 +91,9 @@ class Eval:
         print(report)
 
         if output_dir is not None:
-            path = os.path.join(output_dir, 'text')
-            os.makedirs(path, exist_ok=True)
+            os.makedirs(output_dir, exist_ok=True)
 
-            file = os.path.join(path, 'classification_report.txt')
+            file = os.path.join(output_dir, 'classification_report.txt')
 
             f = open(file, 'w')
             f.write(report)

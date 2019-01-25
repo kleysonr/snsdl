@@ -1,6 +1,7 @@
 import math
 import os
 import tempfile
+import shutil
 import numpy as np
 from keras.preprocessing.image import ImageDataGenerator
 from keras.callbacks import ModelCheckpoint, EarlyStopping
@@ -55,8 +56,8 @@ paramsSearch = {
     'input_shape':[(imageH, imageW, 3)],
     'num_classes':[train_generator.num_classes],
     'optimizer': ['adadelta'],
-    'epochs':[1]
-    # ,'callbacks':callbacks
+    'epochs': [2, 5]
+    # ,'callbacks': callbacks
 }
 
 # Custom model to train
@@ -70,7 +71,7 @@ for p in params:
     artifacts_dir = tempfile.mkdtemp()
 
     # Create new classifier
-    mlfc = MlflowClassifier(myModel.create_model, train_generator, test_generator, val_generator, **p)
+    mlfc = MlflowClassifier(myModel.create_model, train_generator, test_generator, val_generator, artifacts_dir=artifacts_dir, **p)
 
     # Train the model
     history = mlfc.fit_generator()
@@ -78,23 +79,23 @@ for p in params:
     # Predict the test/val samples
     mlfc.predict_generator()
 
-    # Get the training, validation and testing metrics
-    metrics = mlfc.getMetricsValues()
-
     # Predicted labels for test set
     y_predict = mlfc.getTestPredictLabels()
 
     # True labels of the test set
     y_true = mlfc.getTestTrueLabels()
 
-    # Evaluate results
+    # Get the classes names
     class_names = mlfc.getClassNames()
 
     Eval.plot_history(history, png_output=os.path.join(artifacts_dir,'images'), show=False)
     Eval.full_multiclass_report(y_true, y_predict, class_names, png_output=os.path.join(artifacts_dir,'images'), show=False)
 
     # Classification Report
-    Eval.classification_report(y_true, y_predict, output_dir=artifacts_dir)
+    Eval.classification_report(y_true, y_predict, output_dir=os.path.join(artifacts_dir, 'text'))
 
     # Log mlflow
-    mlfc.log(artifacts=artifacts_dir, metrics=metrics)
+    mlfc.log()
+
+    # Clean up
+    shutil.rmtree(artifacts_dir)
