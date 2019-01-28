@@ -222,7 +222,7 @@ class BaseWrapper:
 
     def predict_generator(self):
         """
-        Constructs a new model with 'build_fn' & Generates predictions for the input samples from a data generator.
+        Generates predictions for the input samples from a data generator.
 
         Arguments:
             None
@@ -231,9 +231,6 @@ class BaseWrapper:
             predictions : Numpy array(s) of predictions.
         """
 
-        # Create the Keras models
-        self.model = self.build_fn(**self.filter_sk_params(self.build_fn))
-        
         # Filter parameters for the Keras functions
         fit_args = copy.deepcopy(self.filter_sk_params(self.model.predict_generator))
 
@@ -243,7 +240,7 @@ class BaseWrapper:
 
     def evaluate_generator(self):
         """
-        Constructs a new model with 'build_fn' & Evaluates the model on a data generator..
+        Evaluates the model on a data generator..
 
         Arguments:
             None
@@ -252,9 +249,6 @@ class BaseWrapper:
             scores : Scalar test loss (if the model has a single output and no metrics) or list of scalars (if the model has multiple outputs and/or metrics).
         """
 
-        # Create the Keras models
-        self.model = self.build_fn(**self.filter_sk_params(self.build_fn))
-        
         # Filter parameters for the Keras functions
         fit_args = copy.deepcopy(self.filter_sk_params(self.model.evaluate_generator))
 
