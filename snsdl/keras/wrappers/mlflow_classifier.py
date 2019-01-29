@@ -3,7 +3,6 @@ import mlflow
 import pandas as pd
 from keras.callbacks import CSVLogger
 from snsdl.keras.wrappers import BaseWrapper
-from snsdl.keras.callbacks import MLflowLogger
 
 class MlflowClassifier(BaseWrapper):
     """ Implementation of the mlflow classifier API for Keras using generators."""
@@ -21,7 +20,6 @@ class MlflowClassifier(BaseWrapper):
                 sk_params['callbacks'] = []
             finally:
                 os.makedirs(os.path.join(artifacts_dir, 'text'), exist_ok=True)
-                # sk_params['callbacks'].append(MLflowLogger(artifacts_dir))
                 sk_params['callbacks'].append(CSVLogger(os.path.join(artifacts_dir, 'text', 'training_log.csv')))
 
         # Initialize superclass parameters first
