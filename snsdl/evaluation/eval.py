@@ -200,3 +200,79 @@ class Eval:
         f = open(file, 'w')
         f.write(report.to_string())
         f.close()
+
+
+    @staticmethod
+    def boxplot_report(samples, y_true, y_pred, probs, classes, boxplot_output=None, report_output=None, show=True):
+
+        correct_preds_indx = (np.array(y_true) == np.array(y_pred))
+        correct_predictions = np.where(correct_preds_indx == True)[0]
+
+        data_to_plot = []
+
+        for c in classes:
+            indx_by_class = np.where(np.array(y_pred) == c)[0]
+            correct_indx_by_class = np.intersect1d(indx_by_class, correct_predictions)
+            class_probs = probs[correct_indx_by_class] * 100
+            data_to_plot.append(class_probs)
+
+            if report_output is not None:
+                os.makedirs(report_output, exist_ok=True)
+
+                names_probs = np.array(samples)[correct_indx_by_class]
+                report = pd.DataFrame({'Image': names_probs, 'Probability': class_probs})
+                report = report.sort_values(by='Probability', ascending=False)
+                file = os.path.join(report_output, 'probs_class_{}.txt'.format(c))
+
+                fi = open(file, 'w')
+                fi.write(report.to_string())
+                fi.close()
+
+        f = plt.figure()
+
+        # Create an axes instance
+        ax = f.add_subplot(111)
+
+        ## add patch_artist=True option to ax.boxplot() 
+        ## to get fill color
+        bp = ax.boxplot(data_to_plot, patch_artist=True)
+
+        ## change outline color, fill color and linewidth of the boxes
+        for box in bp['boxes']:
+            # change outline color
+            box.set( color='#7570b3', linewidth=2)
+            # change fill color
+            box.set( facecolor = '#1b9e77' )
+
+        ## change color and linewidth of the whiskers
+        for whisker in bp['whiskers']:
+            whisker.set(color='#7570b3', linewidth=2)
+
+        ## change color and linewidth of the caps
+        for cap in bp['caps']:
+            cap.set(color='#7570b3', linewidth=2)
+
+        ## change color and linewidth of the medians
+        for median in bp['medians']:
+            median.set(color='#b2df8a', linewidth=2)
+
+        ## change the style of fliers and their fill
+        for flier in bp['fliers']:
+            flier.set(marker='o', color='#e7298a', alpha=0.5)
+
+        ## Custom x-axis labels
+        ax.set_xticklabels(classes)
+
+        ## Remove top axes and right axes ticks
+        ax.get_xaxis().tick_bottom()
+        ax.get_yaxis().tick_left()        
+
+        if boxplot_output is not None:
+            os.makedirs(boxplot_output, exist_ok=True)
+            f.savefig(os.path.join(boxplot_output,'box_plot.png'), bbox_inches='tight')
+
+        if show:
+            plt.show()
+            plt.close(f)
+        else:
+            plt.close(f)

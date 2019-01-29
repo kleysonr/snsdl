@@ -97,6 +97,9 @@ for p in params:
     # Wrong classifications
     Eval.wrong_predictions_report(test_generator.filenames, y_true, y_predict, os.path.join(artifacts_dir, 'text'))
 
+    # Boxplot and report probabilities
+    Eval.boxplot_report(test_generator.filenames, y_true, y_predict, mlfc.getTestPredictProbabilities(), class_names, boxplot_output=os.path.join(artifacts_dir,'images'), report_output=os.path.join(artifacts_dir,'text','probs'), show=False)
+
     # Log mlflow
     mlfc.log()
 

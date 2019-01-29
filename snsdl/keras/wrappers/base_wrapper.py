@@ -112,6 +112,13 @@ class BaseWrapper:
 
         return class_names
 
+    def getTestPredictProbabilities(self):
+
+        if self.predictions is not None:
+            return np.max(self.predictions, axis=-1)
+        else:
+            return None
+
     def getTestPredictLabels(self):
 
         if self.predictions is not None:
