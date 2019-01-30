@@ -1,4 +1,5 @@
 import os
+import copy
 import mlflow
 import pandas as pd
 from keras.callbacks import CSVLogger
@@ -9,21 +10,23 @@ class MlflowClassifier(BaseWrapper):
 
     def __init__(self, build_fn, train_generator, test_generator, val_generator=None, tracking_server=None, artifacts_dir=None, **sk_params):
 
+        _sk_params = copy.deepcopy(sk_params)
+
         self.artifacts_dir = artifacts_dir
 
         if artifacts_dir is not None:
 
             # Logs training logs in a csv file
             try:
-                sk_params['callbacks']
+                _sk_params['callbacks']
             except KeyError:
-                sk_params['callbacks'] = []
+                _sk_params['callbacks'] = []
             finally:
                 os.makedirs(os.path.join(artifacts_dir, 'text'), exist_ok=True)
-                sk_params['callbacks'].append(CSVLogger(os.path.join(artifacts_dir, 'text', 'training_log.csv')))
+                _sk_params['callbacks'].append(CSVLogger(os.path.join(artifacts_dir, 'text', 'training_log.csv')))
 
         # Initialize superclass parameters first
-        super(MlflowClassifier, self).__init__(build_fn, train_generator, test_generator, val_generator, **sk_params)
+        super(MlflowClassifier, self).__init__(build_fn, train_generator, test_generator, val_generator, **_sk_params)
 
         # We don't want to force people to have tracking server
         # running on localhost as it tracks in mlruns directory
