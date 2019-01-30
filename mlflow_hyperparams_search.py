@@ -4,7 +4,7 @@ import tempfile
 import shutil
 import numpy as np
 from keras.preprocessing.image import ImageDataGenerator
-from keras.callbacks import ModelCheckpoint, EarlyStopping
+from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard
 from snsdl.evaluation import Eval
 from snsdl.keras.wrappers import MlflowClassifier
 from myModels.shallownet import ShallowNet
@@ -51,13 +51,15 @@ val_generator = idg.flow_from_directory(
 # callbacks = [[EarlyStopping(monitor='val_loss', patience=5), 
 #                 ModelCheckpoint(filepath='/tmp/best_model.h5', monitor='val_loss', save_best_only=True)]]
 
+callbacks = [[TensorBoard(log_dir='/tmp/tb')]]
+
 # Space search
 paramsSearch = {
     'input_shape':[(imageH, imageW, 3)],
     'num_classes':[train_generator.num_classes],
     'optimizer': ['adadelta'],
-    'epochs': [2, 5]
-    # ,'callbacks': callbacks
+    'epochs': [2, 5],
+    'callbacks': callbacks
 }
 
 # Custom model to train
