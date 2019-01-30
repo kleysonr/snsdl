@@ -1,5 +1,6 @@
 import types
 import copy
+import os
 import numpy as np
 from keras.utils.generic_utils import has_arg
 from keras.models import Sequential, Model
@@ -222,6 +223,17 @@ class BaseWrapper:
         
         # Filter parameters for the Keras functions
         fit_args = copy.deepcopy(self.filter_sk_params(self.model.fit_generator))
+
+        # Append a suffix to the TensorBoard log_dir
+        for c in fit_args['callbacks']:
+            if c.__class__.__name__ == 'TensorBoard':
+
+                strkey = copy.deepcopy(self.sk_params)
+                del strkey['callbacks']
+                strkey = ''.join(['{}={}'.format(k,v) for k,v in strkey.items()])
+
+                c.log_dir = os.path.join(c.log_dir, strkey)
+                break
 
         self.history = self.model.fit_generator(self.train_generator, validation_data=self.val_generator, **fit_args)
 
