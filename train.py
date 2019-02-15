@@ -6,7 +6,7 @@ import numpy as np
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Flatten
 from keras.layers import Conv2D, MaxPooling2D
-from snsdl.keras.generators import FsBatchGenerator
+from snsdl.keras.generators import ImgFsBatchGenerator
 from snsdl.evaluation import Eval
 
 # Configuration
@@ -33,7 +33,7 @@ class ImageResizePreprocessor:
 irp = ImageResizePreprocessor(imageW, imageH)
 
 # Keras batch generator instance
-batchGen = FsBatchGenerator('/project/dataset', test_ratio=0.20, val_ratio=0.2, preprocessors=[irp], batch_size=batch_size)
+batchGen = ImgFsBatchGenerator('/project/dataset', test_ratio=0.20, val_ratio=0.2, preprocessors=[irp], batch_size=batch_size)
 
 # Dataset generators
 train_generator = batchGen.train
