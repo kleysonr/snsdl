@@ -1,1 +1,1 @@
-from .fs_batch_generator import FsBatchGenerator
+from .img_fs_batch_generator import ImgFsBatchGenerator

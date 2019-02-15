@@ -1,11 +1,11 @@
 import math, os
 import numpy as np
 from imutils import paths
-from snsdl.keras.generators.base.fs_sequence_generator import FsSequenceGenerator
+from snsdl.keras.generators.base import ImgFsSequenceGenerator
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelBinarizer, LabelEncoder
 
-class FsBatchGenerator():
+class ImgFsBatchGenerator():
     
     def __init__(self, dataset_path, test_ratio=0.25, val_ratio=0.0, batch_size=32, binary_classification=False, shuffle=False, preprocessors=[]):
         """
@@ -167,7 +167,7 @@ class FsBatchGenerator():
         """Get an instance of a train generator"""
 
         if self.trainGenerator is None:
-            self.trainGenerator = FsSequenceGenerator(self.train_test_val['train'], self.labels_train_test_val['train'], batch_size=self.batch_size, shuffle=self.shuffle, preprocessors=self.preprocessors)
+            self.trainGenerator = ImgFsSequenceGenerator(self.train_test_val['train'], self.labels_train_test_val['train'], batch_size=self.batch_size, shuffle=self.shuffle, preprocessors=self.preprocessors)
 
         return self.trainGenerator
 
@@ -176,7 +176,7 @@ class FsBatchGenerator():
         """Get an instance of a test generator"""
 
         if self.testGenerator is None:
-            self.testGenerator = FsSequenceGenerator(self.train_test_val['test'], self.labels_train_test_val['test'], batch_size=self.batch_size, shuffle=self.shuffle, preprocessors=self.preprocessors)
+            self.testGenerator = ImgFsSequenceGenerator(self.train_test_val['test'], self.labels_train_test_val['test'], batch_size=self.batch_size, shuffle=self.shuffle, preprocessors=self.preprocessors)
 
         return self.testGenerator
 
@@ -185,7 +185,7 @@ class FsBatchGenerator():
         """Get an instance of a validation generator"""
 
         if self.valGenerator is None:
-            self.valGenerator = FsSequenceGenerator(self.train_test_val['val'], self.labels_train_test_val['val'], batch_size=self.batch_size, shuffle=self.shuffle, preprocessors=self.preprocessors)
+            self.valGenerator = ImgFsSequenceGenerator(self.train_test_val['val'], self.labels_train_test_val['val'], batch_size=self.batch_size, shuffle=self.shuffle, preprocessors=self.preprocessors)
 
         return self.valGenerator
 

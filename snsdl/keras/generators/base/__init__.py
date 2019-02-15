@@ -1,2 +1,2 @@
 from .base_sequence_generator import BaseSequenceGenerator
-from .fs_sequence_generator import FsSequenceGenerator
+from .img_fs_sequence_generator import ImgFsSequenceGenerator

@@ -6,7 +6,7 @@ from . import BaseSequenceGenerator
 from keras.utils import Sequence
 from keras import backend as K
 
-class FsSequenceGenerator(BaseSequenceGenerator):
+class ImgFsSequenceGenerator(BaseSequenceGenerator):
     """Generate sequence data from the filesystem for Keras."""
 
     def __init__(self, X, y, preprocessors=[], *args, **kwargs):
@@ -20,7 +20,7 @@ class FsSequenceGenerator(BaseSequenceGenerator):
         """
 
         # Initialize superclass parameters first
-        super(FsSequenceGenerator, self).__init__(X, y, *args, **kwargs)
+        super(ImgFsSequenceGenerator, self).__init__(X, y, *args, **kwargs)
 
         self.preprocessors = preprocessors
     
