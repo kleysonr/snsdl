@@ -35,13 +35,14 @@ class BaseSequenceGenerator(Sequence):
 
         # Find list of IDs
         batch_ids = [self.X[k] for k in indexes]
+        y_ids = [self.y[k] for k in indexes]
 
         # Generate data
-        X, y = self.__data_generation(batch_ids, index)
+        X, y = self.__data_generation(batch_ids, y_ids, index)
 
         return (X, y)
 
-    def __data_generation(self, batch_ids, index):
+    def __data_generation(self, batch_ids, y_ids, index):
         """
         Generates data containing batch_size samples.
 
@@ -58,9 +59,9 @@ class BaseSequenceGenerator(Sequence):
         _y = []
 
         # Get labels
-        for ID in batch_ids:
+        for i, ID in enumerate(batch_ids):
             _X.append(batch_ids)
-            _y.append(self.y[ID])
+            _y.append(y_ids[i])
 
         return self.__process(np.array(batch_ids), np.array(_y), index)
 
