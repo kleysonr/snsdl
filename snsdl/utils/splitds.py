@@ -45,7 +45,7 @@ class SplitDataset():
         print("\n[INFO] Finished!")
 
     @staticmethod
-    def previewSplit(inputdir, balanced=False, test_ratio=0.25, val_ratio=0.0, shuffle=False):
+    def previewSplit(inputdir, balanced=False, test_ratio=0.25, val_ratio=0.0, shuffle=False, type='img'):
 
         # Parameters validations
         if not (test_ratio > 0.0 and test_ratio < 1.0):
@@ -54,7 +54,7 @@ class SplitDataset():
         if not (val_ratio >= 0.0 and val_ratio < 1.0):
             raise ValueError('val_ratio must be >= 0.0 and < 1.0')
 
-        datasize, data = SplitDataset.__readFilesDir(inputdir, shuffle, type='txt')
+        datasize, data = SplitDataset.__readFilesDir(inputdir, shuffle, type=type)
 
         # Create balanced/imbalanced training classes.
         if balanced:
