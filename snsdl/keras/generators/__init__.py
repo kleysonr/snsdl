@@ -1,1 +1,2 @@
 from .img_fs_batch_generator import ImgFsBatchGenerator
+from .txt_file_batch_generator import TxtFileBatchGenerator
