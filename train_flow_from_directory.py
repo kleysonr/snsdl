@@ -9,6 +9,16 @@ from keras.layers import Conv2D, MaxPooling2D
 from keras.preprocessing.image import ImageDataGenerator
 from snsdl.evaluation import Eval
 
+"""
+For a big dataset that doesn't fit in the memory, you need to train the model
+using a generator.
+
+This code is an example of using the Keras ImageDataGenerator to feed the training
+processes with batches of images.
+
+At the end, some reports are saved in the output directory.
+"""
+
 # Configuration
 imageW = 64
 imageH = 64
@@ -18,7 +28,7 @@ epochs = 2
 idg = ImageDataGenerator(rescale=1. / 255)
 
 train_generator = idg.flow_from_directory(
-    directory="/tmp/dataset/train",
+    directory="/tmp/dataset/output/train",
     target_size=(imageH, imageW),
     color_mode="rgb",
     batch_size=batch_size,
@@ -28,7 +38,7 @@ train_generator = idg.flow_from_directory(
 )
 
 test_generator = idg.flow_from_directory(
-    directory="/tmp/dataset/test",
+    directory="/tmp/dataset/output/test",
     target_size=(imageH, imageW),
     color_mode="rgb",
     batch_size=batch_size,
@@ -38,7 +48,7 @@ test_generator = idg.flow_from_directory(
 )
 
 val_generator = idg.flow_from_directory(
-    directory="/tmp/dataset/val",
+    directory="/tmp/dataset/output/val",
     target_size=(imageH, imageW),
     color_mode="rgb",
     batch_size=batch_size,

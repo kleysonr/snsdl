@@ -1,5 +1,9 @@
 from snsdl.utils import SplitDataset
 
+"""
+Download a dataset sample and split it in train, test and validation subsets.
+"""
+
 def download_input(input_dir):
     import requests
     import os

@@ -9,6 +9,18 @@ from keras.layers import Conv2D, MaxPooling2D
 from snsdl.keras.generators import ImgFsBatchGenerator
 from snsdl.evaluation import Eval
 
+"""
+For a big dataset that doesn't fit in the memory, you need to train the model
+using a generator.
+
+This code is an example of using a custom image generator to feed the training
+processes with batches of images.
+
+You might also preprocess the images if desired.
+
+At the end, some reports are saved in the output directory.
+"""
+
 # Configuration
 imageW = 64
 imageH = 64
@@ -33,7 +45,7 @@ class ImageResizePreprocessor:
 irp = ImageResizePreprocessor(imageW, imageH)
 
 # Keras batch generator instance
-batchGen = ImgFsBatchGenerator('/project/dataset', test_ratio=0.20, val_ratio=0.2, preprocessors=[irp], batch_size=batch_size)
+batchGen = ImgFsBatchGenerator('/tmp/dataset/input/flower_photos', test_ratio=0.20, val_ratio=0.2, preprocessors=[irp], batch_size=batch_size)
 
 # Dataset generators
 train_generator = batchGen.train
