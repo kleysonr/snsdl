@@ -2,7 +2,7 @@ import os
 import shutil
 import sys
 import numpy as np
-from imutils import paths
+from snsdl.utils import paths
 
 class SplitDataset():
 
@@ -32,7 +32,7 @@ class SplitDataset():
         if not (val_ratio >= 0.0 and val_ratio < 1.0):
             raise ValueError('val_ratio must be >= 0.0 and < 1.0')
 
-        datasize, data = SplitDataset.__readImagesDir(inputdir, shuffle)
+        datasize, data = SplitDataset.__readFilesDir(inputdir, shuffle)
 
         # Create balanced/imbalanced training classes.
         if balanced:
@@ -43,6 +43,26 @@ class SplitDataset():
         SplitDataset.__splitData(datasize, data, outputdir, move, verbose)
 
         print("\n[INFO] Finished!")
+
+    @staticmethod
+    def previewSplit(inputdir, balanced=False, test_ratio=0.25, val_ratio=0.0, shuffle=False):
+
+        # Parameters validations
+        if not (test_ratio > 0.0 and test_ratio < 1.0):
+            raise ValueError('test_ratio must be > 0.0 and < 1.0')
+
+        if not (val_ratio >= 0.0 and val_ratio < 1.0):
+            raise ValueError('val_ratio must be >= 0.0 and < 1.0')
+
+        datasize, data = SplitDataset.__readFilesDir(inputdir, shuffle, type='txt')
+
+        # Create balanced/imbalanced training classes.
+        if balanced:
+            data = SplitDataset.__balancedSplit(datasize, data, test_ratio, val_ratio)
+        else:
+            data = SplitDataset.__imbalancedSplit(datasize, data, test_ratio, val_ratio)
+
+        return data        
 
     @staticmethod
     def __splitData(datasize, data, outputdir, move, verbose):
@@ -185,7 +205,7 @@ class SplitDataset():
         return _data
 
     @staticmethod
-    def __readImagesDir(inputdir, shuffle):
+    def __readFilesDir(inputdir, shuffle, type='img'):
         """
         Read the filenames inside a directory organized by folders representing each classes.
         The directory must follow the structure:
@@ -210,7 +230,11 @@ class SplitDataset():
         size = {}
 
         # Get a list of all the images under dataset/{class}/*
-        fileslist = paths.list_images(inputdir)
+        fileslist = None
+        if type == 'txt':
+            fileslist = paths.list_txts(inputdir)
+        else:
+            fileslist = paths.list_images(inputdir)
 
         for file in fileslist:
 

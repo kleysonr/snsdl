@@ -1,6 +1,6 @@
 import math, os
 import numpy as np
-from imutils import paths
+from snsdl.utils import paths
 from snsdl.keras.generators.base import ImgFsSequenceGenerator
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelBinarizer, LabelEncoder
