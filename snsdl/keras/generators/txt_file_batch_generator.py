@@ -2,7 +2,7 @@ import math, os
 import numpy as np
 from snsdl.utils import paths
 from snsdl.utils.splitds import SplitDataset
-from snsdl.keras.generators.base.txt_file_sequence_generator import TxtFileSequenceGenerator
+from snsdl.keras.generators.base import TxtFileSequenceGenerator
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelBinarizer, LabelEncoder
 from sklearn.utils import shuffle as skshuffle
@@ -58,7 +58,7 @@ class TxtFileBatchGenerator():
 
         # Encoder
         self.le = None
-        
+
         # Encode labels
         if binary_classification:
             self.le = LabelEncoder()
@@ -133,7 +133,7 @@ class TxtFileBatchGenerator():
     def getTrueClasses(self, dataset):
         """Get an array with the true classes for a given dataset (train / test / val)."""
 
-        encoded = [self.labels_train_test_val[dataset][s] for i, s in enumerate(self.train_test_val[dataset])]
+        encoded = [self.labels_train_test_val[dataset][i] for i, s in enumerate(self.train_test_val[dataset])]
         encoded_indx = list(np.argmax(encoded, axis=-1))
 
         return [list(self.class_indices.keys())[list(self.class_indices.values()).index(s)] for s in encoded_indx]

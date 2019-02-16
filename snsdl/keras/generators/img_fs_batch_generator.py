@@ -71,7 +71,10 @@ class ImgFsBatchGenerator():
 
         # Create mappings
         self.encoded_classes = dict(zip(classes_name, self.le.fit_transform(classes_name)))
-        self.class_indices = dict(zip(classes_name, list(np.argmax(class_codes, axis=-1))))        
+        if binary_classification:
+            self.class_indices = dict(zip(classes_name, class_codes))
+        else:
+            self.class_indices = dict(zip(classes_name, list(np.argmax(class_codes, axis=-1))))
 
         # Re-organize the list of files
         for label in self._data.keys():
