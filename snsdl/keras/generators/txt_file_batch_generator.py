@@ -45,7 +45,7 @@ class TxtFileBatchGenerator():
         self.testGenerator = None
         self.valGenerator = None
 
-        self._data = SplitDataset.previewSplit(self.dataset_path, balanced=self.balanced, test_ratio=self.test_ratio, val_ratio=self.val_ratio, shuffle=self.shuffle)
+        self._data = SplitDataset.previewSplit(self.dataset_path, balanced=self.balanced, test_ratio=self.test_ratio, val_ratio=self.val_ratio, shuffle=self.shuffle, type='txt')
 
         # Dict for train, test and val dataset
         self.train_test_val = {'train': [], 'test': [], 'val':[]}
@@ -58,19 +58,6 @@ class TxtFileBatchGenerator():
 
         # Encoder
         self.le = None
-
-        # Re-organize the list of files
-        for label in self._data.keys():
-            for ds in self._data[label]:
-                for f in self._data[label][ds]:
-                    self.train_test_val[ds].append(f)
-                    self.labels_train_test_val[ds].append(label)
-                    self.datasetsize += 1
-
-        # Shuffle the arrays
-        self.train_test_val['train'], self.labels_train_test_val['train'] = skshuffle(self.train_test_val['train'], self.labels_train_test_val['train'], random_state=0)
-        self.train_test_val['test'], self.labels_train_test_val['test'] = skshuffle(self.train_test_val['test'], self.labels_train_test_val['test'], random_state=0)
-        self.train_test_val['val'], self.labels_train_test_val['val'] = skshuffle(self.train_test_val['val'], self.labels_train_test_val['val'], random_state=0)
         
         # Encode labels
         if binary_classification:
@@ -84,7 +71,23 @@ class TxtFileBatchGenerator():
 
         # Create mappings
         self.encoded_classes = dict(zip(classes_name, self.le.fit_transform(classes_name)))
-        self.class_indices = dict(zip(classes_name, list(np.argmax(class_codes, axis=-1))))        
+        if binary_classification:
+            self.class_indices = dict(zip(classes_name, class_codes))
+        else:
+            self.class_indices = dict(zip(classes_name, list(np.argmax(class_codes, axis=-1))))
+
+        # Re-organize the list of files
+        for label in self._data.keys():
+            for ds in self._data[label]:
+                for f in self._data[label][ds]:
+                    self.train_test_val[ds].append(f)
+                    self.labels_train_test_val[ds].append(self.encoded_classes[label])
+                    self.datasetsize += 1
+
+        # Shuffle the arrays
+        self.train_test_val['train'], self.labels_train_test_val['train'] = skshuffle(self.train_test_val['train'], self.labels_train_test_val['train'], random_state=0)
+        self.train_test_val['test'], self.labels_train_test_val['test'] = skshuffle(self.train_test_val['test'], self.labels_train_test_val['test'], random_state=0)
+        self.train_test_val['val'], self.labels_train_test_val['val'] = skshuffle(self.train_test_val['val'], self.labels_train_test_val['val'], random_state=0)
 
         self.__info()
 
@@ -130,7 +133,7 @@ class TxtFileBatchGenerator():
     def getTrueClasses(self, dataset):
         """Get an array with the true classes for a given dataset (train / test / val)."""
 
-        encoded = [self.labels_train_test_val[dataset][s] for s in self.train_test_val[dataset]]
+        encoded = [self.labels_train_test_val[dataset][s] for i, s in enumerate(self.train_test_val[dataset])]
         encoded_indx = list(np.argmax(encoded, axis=-1))
 
         return [list(self.class_indices.keys())[list(self.class_indices.values()).index(s)] for s in encoded_indx]
