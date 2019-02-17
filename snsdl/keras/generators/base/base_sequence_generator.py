@@ -6,14 +6,15 @@ class BaseSequenceGenerator(Sequence):
     """Base sequence generator for Keras."""
     
     def __init__(self, X, y, batch_size=32, shuffle=False):
-        """
-        Class constructor.
-
-        Attributes:
-            X: Array representing the sample data ids.
-            y: Dict mapping samples and labels. {'sample1': 0, 'sample2': 1, 'sample3': 2, 'sample4': 1}
-            batch_size: Number of samples to be generated. If unspecified, batch_size will default to 32.
-            shuffle: If true shuffles dataset before each epoch. If unspecified, shuffle will default to False.
+        """Class constructor.
+        
+        Arguments:
+            X {list} -- Sample data ids.
+            y {list} -- Encoded data labels.
+        
+        Keyword Arguments:
+            batch_size {int} -- Number of samples to be generated. (default: {32})
+            shuffle {bool} -- Shuffles the dataset before each epoch. (default: {False})
         """
 
         self.X = X
@@ -23,12 +24,23 @@ class BaseSequenceGenerator(Sequence):
         self.on_epoch_end()
 
     def __len__(self):
-        """Get the number of batchs per epoch."""
+        """Get the number of batchs per epoch.
+        
+        Returns:
+            int -- Total number of steps (batches of samples) to yield from generator before declaring one epoch finished and starting the next epoch. It should typically be equal to ceil(num_samples / batch_size).
+        """
 
         return math.ceil(len(self.X) / self.batch_size)
 
     def __getitem__(self, index):
-        """Generate one batch of data"""
+        """Generate one batch of data.
+        
+        Arguments:
+            index {int} -- Batch index. Position of the batch in the Sequence.
+        
+        Returns:
+            (numpy.ndarray, numpy.ndarray) -- Tuple of preprocessed images and their labels for a given batch id.
+        """
 
         # Generate indexes of the batch
         indexes = self.indexes[index*self.batch_size:(index+1)*self.batch_size]
@@ -43,16 +55,15 @@ class BaseSequenceGenerator(Sequence):
         return (X, y)
 
     def __data_generation(self, batch_ids, y_ids, index):
-        """
-        Generates data containing batch_size samples.
-
-        Parameters:
-            batch_ids: Array representing the batch sample ids.
-            index: position of the batch in the Sequence.
-
+        """Generates data containing batch_size samples.
+        
+        Arguments:
+            batch_ids {list} -- Samples ids for a given batch id.
+            y_ids {list} -- Encoded labels for a given batch id.
+            index {int} -- Batch index. Position of the batch in the Sequence.
+        
         Returns:
-            Numpy array: sample data
-            Numpy array: labels
+            (numpy.ndarray, numpy.ndarray) -- Tuple of preprocessed images and their labels for a given batch id.
         """
 
         _X = []
@@ -66,7 +77,7 @@ class BaseSequenceGenerator(Sequence):
         return self.__process(np.array(batch_ids), np.array(_y), index)
 
     def on_epoch_end(self):
-        """Updates indexes and shuffle the data after each epoch"""
+        """Updates indexes and shuffle the data after each epoch."""
 
         self.indexes = np.arange(len(self.X))
 
@@ -74,17 +85,15 @@ class BaseSequenceGenerator(Sequence):
             np.random.shuffle(self.indexes)
 
     def __process(self, X, y, index):
-        """
-        Get the raw data and preprocess them.
-
-        Parameters:
-            X: Numpy array representing the batch sample ids.
-            y: Numpy array representing the data labels.
-            index: position of the batch in the Sequence.
-
+        """Get the raw data and preprocess them.
+        
+        Arguments:
+            X {numpy.ndarray} -- Samples ids for a given batch id.
+            y {numpy.ndarray} -- Encoded labels for a given batch id.
+            index {int} -- Batch index. Position of the batch in the Sequence.
+        
         Returns:
-            Numpy array: sample data
-            Numpy array: labels
+            (numpy.ndarray, numpy.ndarray) -- Tuple of preprocessed images and their labels for a given batch id.
         """
 
         images = []
@@ -103,13 +112,14 @@ class BaseSequenceGenerator(Sequence):
         return np.array(images), np.array(labels)          
 
     def process(self, id):
-        """
-        Read and process the image id.
+        """This method must be implemented by a subclasse to read a given
+        sample based on an id and preprocessed it if needed.
 
-        Parameters:
-            id: image id.
-
+        Arguments:
+            id {srt} -- Sample id.
+        
         Returns:
-            Numpy array: image
+            [numpy.ndarray] -- Sample content.
         """
+
         raise RuntimeError('Must be implemented by subclasses.')
