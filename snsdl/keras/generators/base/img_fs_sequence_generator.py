@@ -7,16 +7,17 @@ from keras.utils import Sequence
 from keras import backend as K
 
 class ImgFsSequenceGenerator(BaseSequenceGenerator):
-    """Generate sequence data from the filesystem for Keras."""
+    """Generate sequence of images from the filesystem to the Keras."""
 
     def __init__(self, X, y, preprocessors=[], *args, **kwargs):
-        """
-        Class constructor.
-
-        Attributes:
-            X: Array representing the samples data.
-            y: Dict mapping samples and labels. {'sample1.jpg': 0, 'sample2.jpg': 1, 'sample3.jpg': 2, 'sample4.jpg': 1}
-            preprocessors: Array of objects to preprocess the data.
+        """Class constructor.
+        
+        Arguments:
+            X {list} -- Sample data ids.
+            y {list} -- Encoded data labels.
+        
+        Keyword Arguments:
+            preprocessors {list} -- An objects list to preprocess the samples data. (default: {[]})
         """
 
         # Initialize superclass parameters first
@@ -25,14 +26,13 @@ class ImgFsSequenceGenerator(BaseSequenceGenerator):
         self.preprocessors = preprocessors
     
     def process(self, id):
-        """
-        Read and process the image id.
-
-        Parameters:
-            id: image id.
-
+        """Read the image and preprocess it.
+        
+        Arguments:
+            id {srt} -- Image id.
+        
         Returns:
-            Numpy array: image
+            [numpy.ndarray] -- Image content.
         """
 
         # Read image

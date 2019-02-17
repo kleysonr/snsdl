@@ -7,16 +7,17 @@ from keras import backend as K
 from keras.preprocessing.sequence import pad_sequences
 
 class TxtFileSequenceGenerator(BaseSequenceGenerator):
-    """Generate sequence data from the filesystem for Keras."""
+    """Generate sequence of text files from the filesystem to the Keras."""
 
     def __init__(self, X, y, padding_size=0, padding_position='post', text_sep=' ', preprocessors=[], *args, **kwargs):
-        """
-        Class constructor.
-
-        Attributes:
-            X: Array representing the samples data.
-            y: Dict mapping samples and labels. {'sample1.txt': 0, 'sample2.txt': 1, 'sample3.txt': 2, 'sample4.txt': 1}
-            preprocessors: Array of objects to preprocess the data.
+        """Class constructor.
+        
+        Arguments:
+            X {list} -- Sample data ids.
+            y {list} -- Encoded data labels.
+        
+        Keyword Arguments:
+            preprocessors {list} -- An objects list to preprocess the samples data. (default: {[]})
         """
 
         # Initialize superclass parameters first
@@ -28,14 +29,13 @@ class TxtFileSequenceGenerator(BaseSequenceGenerator):
         self.text_sep = text_sep
     
     def process(self, id):
-        """
-        Read and process a csv file.
-
-        Parameters:
-            id: csv id.
-
+        """Read and process a csv file.
+        
+        Arguments:
+            id {srt} -- Text file id.
+        
         Returns:
-            Numpy array: image
+            [numpy.ndarray] -- Text file content.
         """
 
         with open(id) as f:
