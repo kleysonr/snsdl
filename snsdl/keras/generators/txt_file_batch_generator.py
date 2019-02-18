@@ -96,7 +96,7 @@ class TxtFileBatchGenerator():
         """Get an instance of a train generator"""
 
         if self.trainGenerator is None:
-            self.trainGenerator = TxtFileSequenceGenerator(self.train_test_val['train'], self.labels_train_test_val['train'], batch_size=self.batch_size, shuffle=self.shuffle, preprocessors=self.preprocessors)
+            self.trainGenerator = TxtFileSequenceGenerator(self.train_test_val['train'], self.labels_train_test_val['train'], batch_size=self.batch_size, shuffle=self.shuffle, preprocessors=self.preprocessors, filenames=self.__getFilenames('train'), classes=self.__getTrueIndexClasses('train'), class_indices=self.class_indices)
 
         return self.trainGenerator
 
@@ -105,7 +105,7 @@ class TxtFileBatchGenerator():
         """Get an instance of a test generator"""
 
         if self.testGenerator is None:
-            self.testGenerator = TxtFileSequenceGenerator(self.train_test_val['test'], self.labels_train_test_val['test'], batch_size=self.batch_size, shuffle=self.shuffle, preprocessors=self.preprocessors)
+            self.testGenerator = TxtFileSequenceGenerator(self.train_test_val['test'], self.labels_train_test_val['test'], batch_size=self.batch_size, shuffle=self.shuffle, preprocessors=self.preprocessors, filenames=self.__getFilenames('test'), classes=self.__getTrueIndexClasses('test'), class_indices=self.class_indices)
 
         return self.testGenerator
 
@@ -114,7 +114,7 @@ class TxtFileBatchGenerator():
         """Get an instance of a validation generator"""
 
         if self.valGenerator is None:
-            self.valGenerator = TxtFileSequenceGenerator(self.train_test_val['val'], self.labels_train_test_val['val'], batch_size=self.batch_size, shuffle=self.shuffle, preprocessors=self.preprocessors)
+            self.valGenerator = TxtFileSequenceGenerator(self.train_test_val['val'], self.labels_train_test_val['val'], batch_size=self.batch_size, shuffle=self.shuffle, preprocessors=self.preprocessors, filenames=self.__getFilenames('val'), classes=self.__getTrueIndexClasses('val'), class_indices=self.class_indices)
 
         return self.valGenerator
 
@@ -133,10 +133,23 @@ class TxtFileBatchGenerator():
     def getTrueClasses(self, dataset):
         """Get an array with the true classes for a given dataset (train / test / val)."""
 
-        encoded = [self.labels_train_test_val[dataset][i] for i, s in enumerate(self.train_test_val[dataset])]
-        encoded_indx = list(np.argmax(encoded, axis=-1))
+        encoded_indx = self.__getTrueIndexClasses(dataset)
 
         return [list(self.class_indices.keys())[list(self.class_indices.values()).index(s)] for s in encoded_indx]
+
+    def __getTrueIndexClasses(self, dataset):
+
+        encoded = [self.labels_train_test_val[dataset][i] for i, s in enumerate(self.train_test_val[dataset])]
+        if dataset == 'val' and len(encoded) == 0:
+            encoded_indx = []
+        else:
+            encoded_indx = list(np.argmax(encoded, axis=-1))
+
+        return encoded_indx
+
+    def __getFilenames(self, dataset):
+
+        return self.train_test_val[dataset]
 
     def __info(self):
         print('')

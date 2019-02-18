@@ -7,7 +7,7 @@ from snsdl.utils import paths
 class SplitDataset():
 
     @staticmethod
-    def split(inputdir, outputdir, move=False, balanced=False, test_ratio=0.25, val_ratio=0.0, shuffle=False, verbose=-1):
+    def split(inputdir, outputdir, move=False, balanced=False, test_ratio=0.25, val_ratio=0.0, shuffle=False, type='img', verbose=-1):
         """
         Split a dataset stored in the filesystem in training, testing and validation datasets.
 
@@ -32,7 +32,7 @@ class SplitDataset():
         if not (val_ratio >= 0.0 and val_ratio < 1.0):
             raise ValueError('val_ratio must be >= 0.0 and < 1.0')
 
-        datasize, data = SplitDataset.__readFilesDir(inputdir, shuffle)
+        datasize, data = SplitDataset.__readFilesDir(inputdir, shuffle, type=type)
 
         # Create balanced/imbalanced training classes.
         if balanced:

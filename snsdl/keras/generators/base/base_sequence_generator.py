@@ -5,7 +5,7 @@ from keras.utils import Sequence
 class BaseSequenceGenerator(Sequence):
     """Base sequence generator for Keras."""
     
-    def __init__(self, X, y, batch_size=32, shuffle=False):
+    def __init__(self, X, y, batch_size=32, shuffle=False, **kwargs):
         """Class constructor.
         
         Arguments:
@@ -21,6 +21,9 @@ class BaseSequenceGenerator(Sequence):
         self.y = y
         self.batch_size = batch_size
         self.shuffle = shuffle
+        self.class_indices = kwargs['class_indices']
+        self.classes = kwargs['classes']
+        self.filenames = kwargs['filenames']
         self.on_epoch_end()
 
     def __len__(self):
