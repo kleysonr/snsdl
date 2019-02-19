@@ -228,14 +228,22 @@ class Eval:
                 fi.write(report.to_string())
                 fi.close()
 
-        f = plt.figure()
+        # Calculate chart area size
+        leftmargin = 0.5 # inches
+        rightmargin = 0.5 # inches
+        categorysize = 0.5 # inches
+        figwidth = leftmargin + rightmargin + ((len(classes)+1) * categorysize)
 
-        # Create an axes instance
+        # Create figure
+        f = plt.figure(figsize=(figwidth, 5))
+
+        # Create an axes instance and ajust the subplot size
         ax = f.add_subplot(111)
+        f.subplots_adjust(left=leftmargin/figwidth, right=1-rightmargin/figwidth, top=0.94, bottom=0.1)
 
         ## add patch_artist=True option to ax.boxplot() 
         ## to get fill color
-        bp = ax.boxplot(data_to_plot, patch_artist=True)
+        bp = ax.boxplot(data_to_plot, patch_artist=True, positions=np.arange(len(classes)))
 
         ## change outline color, fill color and linewidth of the boxes
         for box in bp['boxes']:
@@ -261,7 +269,7 @@ class Eval:
             flier.set(marker='o', color='#e7298a', alpha=0.5)
 
         ## Custom x-axis labels
-        ax.set_xticklabels(classes)
+        ax.set_xticklabels(classes, rotation=45, ha='right')
 
         ## Remove top axes and right axes ticks
         ax.get_xaxis().tick_bottom()
