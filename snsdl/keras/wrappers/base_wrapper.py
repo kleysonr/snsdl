@@ -31,7 +31,7 @@ class BaseWrapper:
         self.build_fn = build_fn
         self.train_generator = train_generator
         self.test_generator = test_generator
-        self.val_generator = val_generator if val_generator is not None else test_generator
+        self.val_generator = val_generator if val_generator is not None and len(val_generator.filenames) > 0 else test_generator
         self.sk_params = sk_params
         self.check_params(sk_params)
         self.model = None
