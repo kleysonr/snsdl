@@ -112,23 +112,36 @@ class Eval:
         else:
             title='Confusion matrix'
 
-        f = plt.figure()
+        # Calculate chart area size
+        leftmargin = 0.5 # inches
+        rightmargin = 0.5 # inches
+        categorysize = 0.5 # inches
+        figwidth = leftmargin + rightmargin + (len(classes) * categorysize)           
 
-        plt.imshow(cm, interpolation='nearest', cmap=cmap)
+        f = plt.figure(figsize=(figwidth, figwidth))
+
+        # Create an axes instance and ajust the subplot size
+        ax = f.add_subplot(111)
+        ax.set_aspect(1)
+        f.subplots_adjust(left=leftmargin/figwidth, right=1-rightmargin/figwidth, top=0.94, bottom=0.1)
+
+        res = ax.imshow(cm, interpolation='nearest', cmap=cmap)
+
         plt.title(title)
-        plt.colorbar()
-        tick_marks = np.arange(len(classes))
-        plt.xticks(tick_marks, classes, rotation=45)
-        plt.yticks(tick_marks, classes)
+        plt.colorbar(res)
+        ax.set_xticks(range(len(classes)))
+        ax.set_yticks(range(len(classes)))
+        ax.set_xticklabels(classes, rotation=45, ha='right')
+        ax.set_yticklabels(classes)
 
         fmt = '.2f' if normalize else 'd'
         thresh = cm.max() / 2.
         for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
-            plt.text(j, i, format(cm[i, j], fmt),
+            ax.text(j, i, format(cm[i, j], fmt),
                     horizontalalignment="center",
                     color="white" if cm[i, j] > thresh else "black")
 
-        plt.tight_layout()
+        # plt.tight_layout()
         plt.ylabel('True label')
         plt.xlabel('Predicted label')
 
@@ -141,6 +154,12 @@ class Eval:
             plt.close(f)
         else:
             plt.close(f)
+
+
+
+
+
+
 
     @staticmethod
     def plot_wrong_predictions(samples, y_true, y_pred, classes, size=9):
@@ -200,7 +219,6 @@ class Eval:
         f = open(file, 'w')
         f.write(report.to_string())
         f.close()
-
 
     @staticmethod
     def boxplot_report(samples, y_true, y_pred, probs, classes, boxplot_output=None, report_output=None, show=True):
