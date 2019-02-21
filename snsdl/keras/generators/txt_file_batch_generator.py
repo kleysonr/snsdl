@@ -69,12 +69,11 @@ class TxtFileBatchGenerator():
         classes_name = list(self._data.keys())
         class_codes = self.le.fit_transform(classes_name)
 
-        # Create mappings
-        self.encoded_classes = dict(zip(classes_name, self.le.fit_transform(classes_name)))
-        if binary_classification:
-            self.class_indices = dict(zip(classes_name, class_codes))
-        else:
-            self.class_indices = dict(zip(classes_name, list(np.argmax(class_codes, axis=-1))))
+        # Create a mapping for the class name and its hot encode value
+        self.encoded_classes = dict(zip(classes_name, class_codes))
+
+        # Temporary structures
+        _valid_labels = {'train': set([]), 'test': set([]), 'val':set([])}
 
         # Re-organize the list of files
         for label in self._data.keys():
@@ -82,7 +81,25 @@ class TxtFileBatchGenerator():
                 for f in self._data[label][ds]:
                     self.train_test_val[ds].append(f)
                     self.labels_train_test_val[ds].append(self.encoded_classes[label])
+
+                    # Keep track of existing samples for a given label in a given dataset
+                    _valid_labels[ds].add(label)
+
                     self.datasetsize += 1
+
+        self.class_indices = {'train': {}, 'test': {}, 'val':{}}
+
+        try:
+            if binary_classification:
+                self.class_indices['train'] = dict(zip(list(_valid_labels['train']), self.le.transform(list(_valid_labels['train']))))
+                self.class_indices['test'] = dict(zip(list(_valid_labels['test']), self.le.transform(list(_valid_labels['test']))))
+                self.class_indices['val'] = dict(zip(list(_valid_labels['val']), self.le.transform(list(_valid_labels['val']))))
+            else:
+                self.class_indices['train'] = dict(zip(list(_valid_labels['train']), list(np.argmax(self.le.transform(list(_valid_labels['train'])), axis=-1))))
+                self.class_indices['test'] = dict(zip(list(_valid_labels['test']), list(np.argmax(self.le.transform(list(_valid_labels['test'])), axis=-1))))
+                self.class_indices['val'] = dict(zip(list(_valid_labels['val']), list(np.argmax(self.le.transform(list(_valid_labels['val'])), axis=-1))))
+        except:
+            pass
 
         # Shuffle the arrays
         self.train_test_val['train'], self.labels_train_test_val['train'] = skshuffle(self.train_test_val['train'], self.labels_train_test_val['train'], random_state=0)
@@ -96,7 +113,7 @@ class TxtFileBatchGenerator():
         """Get an instance of a train generator"""
 
         if self.trainGenerator is None:
-            self.trainGenerator = TxtFileSequenceGenerator(self.train_test_val['train'], self.labels_train_test_val['train'], batch_size=self.batch_size, shuffle=self.shuffle, preprocessors=self.preprocessors, filenames=self.__getFilenames('train'), classes=self.__getTrueIndexClasses('train'), class_indices=self.class_indices)
+            self.trainGenerator = TxtFileSequenceGenerator(self.train_test_val['train'], self.labels_train_test_val['train'], batch_size=self.batch_size, shuffle=self.shuffle, preprocessors=self.preprocessors, filenames=self.__getFilenames('train'), classes=self.__getTrueIndexClasses('train'), class_indices=self.class_indices['train'])
 
         return self.trainGenerator
 
@@ -105,7 +122,7 @@ class TxtFileBatchGenerator():
         """Get an instance of a test generator"""
 
         if self.testGenerator is None:
-            self.testGenerator = TxtFileSequenceGenerator(self.train_test_val['test'], self.labels_train_test_val['test'], batch_size=self.batch_size, shuffle=self.shuffle, preprocessors=self.preprocessors, filenames=self.__getFilenames('test'), classes=self.__getTrueIndexClasses('test'), class_indices=self.class_indices)
+            self.testGenerator = TxtFileSequenceGenerator(self.train_test_val['test'], self.labels_train_test_val['test'], batch_size=self.batch_size, shuffle=self.shuffle, preprocessors=self.preprocessors, filenames=self.__getFilenames('test'), classes=self.__getTrueIndexClasses('test'), class_indices=self.class_indices['test'])
 
         return self.testGenerator
 
@@ -114,7 +131,7 @@ class TxtFileBatchGenerator():
         """Get an instance of a validation generator"""
 
         if self.valGenerator is None:
-            self.valGenerator = TxtFileSequenceGenerator(self.train_test_val['val'], self.labels_train_test_val['val'], batch_size=self.batch_size, shuffle=self.shuffle, preprocessors=self.preprocessors, filenames=self.__getFilenames('val'), classes=self.__getTrueIndexClasses('val'), class_indices=self.class_indices)
+            self.valGenerator = TxtFileSequenceGenerator(self.train_test_val['val'], self.labels_train_test_val['val'], batch_size=self.batch_size, shuffle=self.shuffle, preprocessors=self.preprocessors, filenames=self.__getFilenames('val'), classes=self.__getTrueIndexClasses('val'), class_indices=self.class_indices['val'])
 
         return self.valGenerator
 
@@ -135,7 +152,7 @@ class TxtFileBatchGenerator():
 
         encoded_indx = self.__getTrueIndexClasses(dataset)
 
-        return [list(self.class_indices.keys())[list(self.class_indices.values()).index(s)] for s in encoded_indx]
+        return [list(self.class_indices[dataset].keys())[list(self.class_indices[dataset].values()).index(s)] for s in encoded_indx]
 
     def __getTrueIndexClasses(self, dataset):
 
