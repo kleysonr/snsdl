@@ -83,7 +83,9 @@ class Eval:
         cnf_matrix = confusion_matrix(y_true,y_pred)
         print(cnf_matrix)
 
-        Eval.plot_confusion_matrix(cnf_matrix,classes=classes, png_output=png_output, show=show)
+        classes = Eval.__filterClasses(y_true, y_pred, classes)
+
+        Eval.plot_confusion_matrix(cnf_matrix, classes=classes, png_output=png_output, show=show)
 
     @staticmethod
     def classification_report(y_true, y_pred, digits=5, output_dir=None):
@@ -106,24 +108,32 @@ class Eval:
         This function prints and plots the confusion matrix.
         Normalization can be applied by setting `normalize=True`.
         """
+
+        _min_class_size_auto_ajust = 10
+
         if normalize:
             cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
             title='Normalized confusion matrix'
         else:
             title='Confusion matrix'
 
-        # Calculate chart area size
-        leftmargin = 0.5 # inches
-        rightmargin = 0.5 # inches
-        categorysize = 0.5 # inches
-        figwidth = leftmargin + rightmargin + (len(classes) * categorysize)           
+        if len(classes) > _min_class_size_auto_ajust:
+            # Calculate chart area size
+            leftmargin = 0.5 # inches
+            rightmargin = 0.5 # inches
+            categorysize = 0.5 # inches
+            figwidth = leftmargin + rightmargin + (len(classes) * categorysize)           
 
-        f = plt.figure(figsize=(figwidth, figwidth))
+            f = plt.figure(figsize=(figwidth, figwidth))
+        else:
+            f = plt.figure()
 
         # Create an axes instance and ajust the subplot size
         ax = f.add_subplot(111)
         ax.set_aspect(1)
-        f.subplots_adjust(left=leftmargin/figwidth, right=1-rightmargin/figwidth, top=0.94, bottom=0.1)
+
+        if len(classes) > _min_class_size_auto_ajust:
+            f.subplots_adjust(left=leftmargin/figwidth, right=1-rightmargin/figwidth, top=0.94, bottom=0.1)
 
         res = ax.imshow(cm, interpolation='nearest', cmap=cmap)
 
@@ -155,8 +165,21 @@ class Eval:
         else:
             plt.close(f)
 
+    @staticmethod
+    def __filterClasses(y_true, y_pred, classes):
+        """
+        Filter the classes list for only those ones presents in the y_true and y_pred lists.
+        """
 
+        _valid_classes = set(y_true + y_pred)
+        _classes = set(classes)
+        _unused_classes = _classes.difference(_valid_classes)
 
+        for c in _unused_classes:
+            idx = classes.index(c)
+            classes.pop(idx)        
+
+        return classes
 
 
 
@@ -207,10 +230,14 @@ class Eval:
         wrong_preds_indx = (np.array(y_true) == np.array(y_pred))
         wrong_predictions = np.array(samples)[np.where(wrong_preds_indx == False)]
 
+        for i, s in enumerate(wrong_predictions):
+            tokens = s.split(os.path.sep)
+            wrong_predictions[i] = '/'.join(tokens[-2:])
+
         y_true_sample = np.array(y_true)[np.where(wrong_preds_indx == False)]
         y_pred_sample = np.array(y_pred)[np.where(wrong_preds_indx == False)]
 
-        report = pd.DataFrame({'Image': wrong_predictions, 'True': y_true_sample, 'Predicted': y_pred_sample})
+        report = pd.DataFrame({'Sample': wrong_predictions, 'True': y_true_sample, 'Predicted': y_pred_sample})
 
         os.makedirs(output_dir, exist_ok=True)
 
