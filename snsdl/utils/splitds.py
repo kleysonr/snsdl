@@ -3,6 +3,9 @@ import shutil
 import sys
 import numpy as np
 from snsdl.utils import paths
+import logging
+
+logger = logging.getLogger(__name__)
 
 class SplitDataset():
 
@@ -253,8 +256,8 @@ class SplitDataset():
                 size[label] += 1
 
         if len(size.keys()) == 0:
-            print("\n[INFO] Exiting... no input files found!\n")
-            sys.exit(0)
+            logger.info("Exiting... no input files found!\n")
+            sys.exit()
 
         if shuffle:
 
