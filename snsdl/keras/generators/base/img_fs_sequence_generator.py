@@ -1,7 +1,6 @@
 import math
 import numpy as np
 import os
-import cv2
 from . import BaseSequenceGenerator
 from keras.utils import Sequence
 from keras import backend as K
@@ -19,6 +18,8 @@ class ImgFsSequenceGenerator(BaseSequenceGenerator):
         Keyword Arguments:
             preprocessors {list} -- An objects list to preprocess the samples data. (default: {[]})
         """
+        
+        import cv2
 
         # Initialize superclass parameters first
         super(ImgFsSequenceGenerator, self).__init__(X, y, *args, **kwargs)
