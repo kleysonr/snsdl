@@ -121,7 +121,9 @@ class TrainingDataset():
 
             logger.info('Generating balanced validation dataset...')
 
-            for i in range(val_offset, train_offset, batchSize):
+            val_startoffset = round(train_offset * (1.0 - self.val_ratio)) if self.val_ratio > 0.0 else 0
+
+            for i in range(val_startoffset, train_offset, batchSize):
 
                 _buffer = []
 
