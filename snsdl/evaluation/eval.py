@@ -1,12 +1,11 @@
-from sklearn.metrics import confusion_matrix, classification_report, accuracy_score
+from sklearn.metrics import classification_report, accuracy_score
 import matplotlib.pyplot as plt
-from matplotlib import cm
 import numpy as np
-import itertools
 import os
 import pandas as pd
+from pycm import *
 
-# Credits - https://www.kaggle.com/danbrice/keras-plot-history-full-report-and-grid-search
+# Partial Credits - https://www.kaggle.com/danbrice/keras-plot-history-full-report-and-grid-search
 
 class Eval:
 
@@ -64,36 +63,19 @@ class Eval:
             plt.close(f)
 
     @staticmethod
-    def full_multiclass_report(y_true, y_pred, classes, png_output=None, show=True):
+    def full_multiclass_report(y_true, y_pred, output_dir=None):
         """
-        Multiclass or binary report.
-        If binary (sigmoid output), set binary parameter to True
+        Multiclass report.
         """
 
         # Print accuracy score
-        print("Accuracy : "+ str(accuracy_score(y_true,y_pred)))
+        print('Accuracy : ' + str(accuracy_score(y_true,y_pred)) + '\n')
         
-        print("")
-        
-        # Print classification report
-        print("Classification Report")
-        Eval.classification_report(y_true,y_pred,digits=5)
-        
-        # Plot confusion matrix
-        cnf_matrix = confusion_matrix(y_true,y_pred)
-        print(cnf_matrix)
-
-        classes = Eval.__filterClasses(y_true, y_pred, classes)
-
-        Eval.plot_confusion_matrix(cnf_matrix, classes=classes, png_output=png_output, show=show)
-
-    @staticmethod
-    def classification_report(y_true, y_pred, digits=5, output_dir=None):
-
-        report = classification_report(y_true,y_pred,digits=5)
+        report = classification_report(y_true, y_pred, digits=5)
         print(report)
 
         if output_dir is not None:
+
             os.makedirs(output_dir, exist_ok=True)
 
             file = os.path.join(output_dir, 'classification_report.txt')
@@ -103,86 +85,57 @@ class Eval:
             f.close()
 
     @staticmethod
-    def plot_confusion_matrix(cm, classes, normalize=False, cmap=cm.Blues, png_output=None, show=True):
-        """
-        This function prints and plots the confusion matrix.
-        Normalization can be applied by setting `normalize=True`.
-        """
+    def confusion_matrix_report(y_true, y_pred, output_dir=None, largeCM=False, overall_param=None, class_param=None, class_name=None, matrix_save=True, normalize=False, color='silver'):
 
-        _min_class_size_auto_ajust = 10
+        cm = ConfusionMatrix(actual_vector=y_true, predict_vector=y_pred)
+        file = os.path.join(output_dir, 'cm_report')
 
-        if normalize:
-            cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
-            title='Normalized confusion matrix'
+        # If CM matrix is large, save report to disk
+        if largeCM:
+            if output_dir is None:
+                print('[WARN] For a large confusion matrix, `output_dir` must be specified.')
+
+            else:
+                cm.save_csv(file, class_param=class_param, class_name=class_name, matrix_save=matrix_save, normalize=normalize)
+
+                if os.path.exists(os.path.join(output_dir, 'cm_report.csv')):
+
+                    csv_f = pd.read_csv(os.path.join(output_dir, 'cm_report.csv'))
+
+                    with open(os.path.join(output_dir, 'cm_report.txt'), 'w') as f:
+                        f.write(csv_f.to_string())
+
+                    col_names = list(csv_f.columns)[1:]
+
+                    if os.path.exists(os.path.join(output_dir, 'cm_report_matrix.csv')):
+
+                        csv_f = pd.read_csv(os.path.join(output_dir, 'cm_report_matrix.csv'), names=col_names)
+                        csv_f.insert(loc=0, column='Class', value=col_names)
+
+                        with open(os.path.join(output_dir, 'cm_report_matrix.txt'), 'w') as f:
+                            f.write(csv_f.to_string())
+
+                        #
+                        results = []
+                        for i in csv_f.index:
+
+                            row = csv_f.loc[[i]]
+                            a = row.loc[:, (row != 0).any()]
+                            class_name = a.iloc[0,0] 
+                            a = a.rename(columns = {class_name:'*'+class_name+'*'})
+
+                            results.append(a.to_string())
+
+                        with open(os.path.join(output_dir, 'cm_report_matrix_summary.txt'), 'w') as f:
+                            for r in results: 
+                                f.write(r) 
+                                f.write('\r\n\r\n') 
+
         else:
-            title='Confusion matrix'
+            print(cm)
 
-        if len(classes) > _min_class_size_auto_ajust:
-            # Calculate chart area size
-            leftmargin = 0.5 # inches
-            rightmargin = 0.5 # inches
-            categorysize = 0.5 # inches
-            figwidth = leftmargin + rightmargin + (len(classes) * categorysize)           
-
-            f = plt.figure(figsize=(figwidth, figwidth))
-        else:
-            f = plt.figure()
-
-        # Create an axes instance and ajust the subplot size
-        ax = f.add_subplot(111)
-        ax.set_aspect(1)
-
-        if len(classes) > _min_class_size_auto_ajust:
-            f.subplots_adjust(left=leftmargin/figwidth, right=1-rightmargin/figwidth, top=0.94, bottom=0.1)
-
-        res = ax.imshow(cm, interpolation='nearest', cmap=cmap)
-
-        plt.title(title)
-        plt.colorbar(res)
-        ax.set_xticks(range(len(classes)))
-        ax.set_yticks(range(len(classes)))
-        ax.set_xticklabels(classes, rotation=45, ha='right')
-        ax.set_yticklabels(classes)
-
-        fmt = '.2f' if normalize else 'd'
-        thresh = cm.max() / 2.
-        for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
-            ax.text(j, i, format(cm[i, j], fmt),
-                    horizontalalignment="center",
-                    color="white" if cm[i, j] > thresh else "black")
-
-        # plt.tight_layout()
-        plt.ylabel('True label')
-        plt.xlabel('Predicted label')
-
-        if png_output is not None:
-            os.makedirs(png_output, exist_ok=True)
-            f.savefig(os.path.join(png_output,'confusion_matrix.png'), bbox_inches='tight')
-
-        if show:
-            plt.show()
-            plt.close(f)
-        else:
-            plt.close(f)
-
-    @staticmethod
-    def __filterClasses(y_true, y_pred, classes):
-        """
-        Filter the classes list for only those ones presents in the y_true and y_pred lists.
-        """
-
-        _valid_classes = set(y_true + y_pred)
-        _classes = set(classes)
-        _unused_classes = _classes.difference(_valid_classes)
-
-        for c in _unused_classes:
-            idx = classes.index(c)
-            classes.pop(idx)        
-
-        return classes
-
-
-
+            if output_dir is not None:
+                cm.save_html(file, overall_param=overall_param, class_param=class_param, class_name=class_name, color=color)
 
     @staticmethod
     def plot_wrong_predictions(samples, y_true, y_pred, classes, size=9):
