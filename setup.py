@@ -4,7 +4,7 @@
 from setuptools import setup, find_packages
 
 setup(name='snsdl',
-      version='0.0.3',
+      version='0.0.4',
       description='Deep Learning helpers and mlflow integration',
       url='https://github.com/kleysonr/snsdl',
       author='Kleyson Rios',
